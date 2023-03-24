@@ -1,0 +1,16 @@
+  # 1) timezone 복원 => Asia/Seoul
+  # 2) timesync role => time.bora.net
+---
+- name: 복구
+  hosts: datacenters
+  gather_facts: no
+  pre_tasks:
+    - name: Configure Timezone => Asia/Seoul
+      ansible.builtin.timezone:
+        name: Asia/Seoul
+  roles:
+    - rhel-system-roles.timesync
+  
+
+  
+  

@@ -1,0 +1,4 @@
+URL: ansible1.example.com
+REQUEST_URL1: "http://{{ URL }}"
+REQUEST_URL2: "https://{{ URL }}"
+WEB_USER: guest

@@ -1,0 +1,65 @@
+---
+- name: LVM 작업을 시작합시다.
+  hosts: targetserver
+  tasks:
+    - name: Create partitions on /dev/sdb 
+      parted:
+        device: "{{ item }}"
+        number: 1
+        state: present
+        align: optimal
+        part_end: 1GB
+        flags: [lvm] 
+      loop:
+        - /dev/sdb
+        - /dev/sdc
+
+    - name: PV 만들고 -> VG 만들고
+      lvg:
+        vg: vg1  
+        pvs: /dev/sdb1,/dev/sdc1 
+
+    - name: lv1,lv2 만들고
+      lvol:
+        lv: "{{ item.lv }}"
+        vg: "{{ item.vg }}"
+        size: "{{ item.size }}"
+      with_items:
+        - { lv: lv1, vg: vg1, size: 512 }
+        - { lv: lv2, vg: vg1, size: 1024 }
+
+    - name: FS작업  * /dev/vg1/lv1 - ext4 -> 
+      filesystem:
+        fstype: ext4
+        dev: /dev/vg1/lv1
+    
+    - name: FS작업  * /dev/vg1/lv2 - xfs ->
+      filesystem:
+        fstype: xfs
+        dev: /dev/vg1/lv2
+
+    - name: 마운트할 디렉토리 만들고 /mnt/lv[1,2]
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - /mnt/lv1
+        - /mnt/lv2
+
+
+    - name: 마운트 하자  * /dev/vg1/lv1(ext4) -> /mnt/lv1
+      mount:
+        path: /mnt/lv1
+        src: /dev/vg1/lv1
+        fstype: ext4
+        opts: defaults
+        state: mounted
+
+    - name: 마운트 하자  * /dev/vg1/lv2(xfs) -> /mnt/lv2
+      mount:
+        path: /mnt/lv2
+        src: /dev/vg1/lv2
+        fstype: xfs
+        opts: defaults
+        state: mounted

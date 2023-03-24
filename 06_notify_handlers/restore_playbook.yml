@@ -1,0 +1,27 @@
+---
+- name: DB 설정 지우자
+  hosts: databases
+  vars:
+    db_packages:
+      - mariadb-server
+      - python3-PyMySQL
+    db_svc: mariadb
+    db_conf_src: http://ansible.example.com/my.cnf.standard
+    db_conf_dest: /etc/my.cnf
+
+  gather_facts: no
+  tasks:
+
+    - name: DB service stopped  [mariadb]
+      service:
+        name: "{{ db_svc }}"
+        state: stopped
+        enabled: no
+    
+    - name: DB uninstall [mariadb-server], [python3-PyMySQL]
+      yum:
+        name: "{{ db_packages }}"
+        state: absent
+
+
+

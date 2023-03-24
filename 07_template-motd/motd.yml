@@ -1,0 +1,11 @@
+---
+- name: Configure /etc/motd
+  hosts: all
+  gather_facts: yes
+  vars:
+    - system_owner : IAMKING@naver.com
+  tasks:
+    - name: Deploy /etc/motd file
+      ansible.builtin.template:
+        src: template/motd.j2
+        dest: /etc/motd

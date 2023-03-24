@@ -1,0 +1,14 @@
+    # 1) 웹 패키지 설치 및 기동
+    # * httpd 패키지 설치
+    # * httpd 서비스 기동
+---
+- name: 패키지 설치 - {{ PKG_WEBS }}
+  ansible.builtin.yum:
+    name: "{{ PKG_WEBS }}"
+    state: latest
+
+- name: 서비스 기동 - {{ SVC_WEB }}
+  ansible.builtin.service:
+    name: "{{ SVC_WEB }}"
+    state: started
+    enabled: yes

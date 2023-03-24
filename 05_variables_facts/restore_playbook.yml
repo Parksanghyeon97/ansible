@@ -1,0 +1,58 @@
+---
+- name: 복원하자
+  hosts: ansible1.example.com
+  vars_files:
+    - vars/vars.yml
+  tasks:
+
+    # 방화벽 서비스 내리고 - http, https
+    # 서비스 내리고 - firewalld, httpd
+    # /etc/httpd/secrets 디렉토리 지우고 (v)
+    # /var/www/html/.htaccess 파일 지우고 (v)
+    # /etc/httpd/conf/httpd.conf 파일 지우고 (v)
+    # 패키지 지우고 - firewalld, httpd, mod_ssl
+
+    - name: 방화벽 서비스 내리고 - http, https
+      firewalld:
+        service: "{{ item }}"
+        permanent: yes
+        immediate: yes
+        state: disabled
+      loop:
+        - "{{ FW_HTTP }}"
+        - "{{ FW_HTTPS }}"
+    
+    - name: 서비스 내리고 - firewalld, httpd
+      service:
+        name: "{{ item }}"
+        state: stopped
+      loop:
+        - "{{ SVC_FW  }}"
+        - "{{ SVC_WEB }}"
+    
+    - name: /etc/httpd/secrets 디렉토리 지우고
+      file:
+        path: "{{ SECRETS_DIR }}"
+        state: absent
+
+    - name: /var/www/html/.htaccess 파일 지우고
+      file:
+        path: "{{ HTACCESS_DEST }}"
+        state: absent
+
+    - name: /etc/httpd/conf/httpd.conf 파일 지우고
+      file:
+        path: "{{ CONF_HTTPD_DEST }}"
+        state: absent
+
+    - name: 패키지 지우고 - firewalld, httpd, mod_ssl
+      yum:
+        name:
+          - "{{ PKG_FW }}"
+          - "{{ PKG_HTTP }}"
+          - "{{ PKG_HTTPS }}"
+        state: absent
+
+
+
+

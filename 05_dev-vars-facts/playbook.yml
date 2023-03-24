@@ -1,0 +1,14 @@
+---
+- name: 사용자 정의 팩트를 사용하여 web1 서버 구성하기
+  hosts: webserver
+  tasks:
+    - name: (1) 웹 패키지 설치
+      yum:
+        name: "{{ ansible_local.custom.general.package }}"
+        state: present
+    
+    - name: (2) 웹 서비스 기동
+      service:
+        name: "{{ ansible_local.custom.general.service }}"
+        state: "{{ ansible_local.custom.general.state }}"
+        enabled: yes

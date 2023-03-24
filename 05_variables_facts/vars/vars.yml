@@ -1,0 +1,15 @@
+PKG_FW: firewalld
+PKG_HTTP: httpd
+PKG_HTTPS: mod_ssl
+CONF_HTTPD_SRC: files/httpd.conf
+CONF_HTTPD_DEST: /etc/httpd/conf/httpd.conf
+HTACCESS_SRC: files/.htaccess
+HTACCESS_DEST: "{{ WEB_ROOT }}/.htaccess"
+SECRETS_DIR: /etc/httpd/secrets
+SECRETS_SRC: files/htpasswd
+SECRETS_DEST: "{{ SECRETS_DIR }}/htpasswd"
+WEB_ROOT: /var/www/html
+SVC_FW : firewalld
+SVC_WEB : httpd
+FW_HTTP: http
+FW_HTTPS: https

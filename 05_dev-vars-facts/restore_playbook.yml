@@ -1,0 +1,24 @@
+---
+- name: 플레이북 복구
+  hosts: all
+  tasks:
+    # 1) /etc/ansible/facts.d 삭제
+    # 2) 웹 서비스 내리기 - httpd
+    # 3) 웹 패키지 삭제 - httpd
+
+    - name: (1) /etc/ansible/facts.d 삭제
+      file:
+        path: /etc/ansible/facts.d
+        state: absent
+    
+    - name: (2) 웹 서비스 내리기 - httpd
+      service:
+        name: httpd
+        state: stopped
+        enabled: no
+    
+    - name: (3) 웹 패키지 삭제 - httpd
+      yum:
+        name: httpd
+        state: absent
+    

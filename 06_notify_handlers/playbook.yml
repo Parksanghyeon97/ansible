@@ -1,0 +1,45 @@
+---
+- name: DB 설정
+  hosts: databases
+  become: true
+  vars:
+    db_packages:
+      - mariadb-server
+      - python3-PyMySQL
+    db_svc: mariadb
+    db_conf_src: http://ansible.example.com/my.cnf.standard
+    db_conf_dest: /etc/my.cnf
+
+  gather_facts: no
+  tasks:
+    - name: DB install [mariadb-server], [python3-PyMySQL]
+      yum:
+        name: "{{ db_packages }}"
+        state: present
+      notify:
+        - set db password
+
+    - name: DB service start  [mariadb]
+      service:
+        name: "{{ db_svc }}"
+        state: started
+        enabled: yes
+    
+    - name: DB service configuration 
+      ansible.builtin.get_url:
+        url: "{{ db_conf_src }}"
+        dest: "{{ db_conf_dest }}"
+      notify:
+        - restart db service
+
+  handlers:
+    - name: set db password
+      ansible.builtin.mysql_user:
+        name: root
+        password: soldesk1.
+
+    - name: restart db service
+      ansible.builtin.service:
+        name: "{{ db_svc }}"
+        state: restarted
+        enabled: true

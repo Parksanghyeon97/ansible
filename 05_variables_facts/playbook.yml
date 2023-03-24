@@ -1,0 +1,105 @@
+---
+#
+# 실행방법: ansible-playbook playbook.yml --vault-password-file=vault-pass
+#
+- name: 웹 서버 설치 + 설정 _ with 인증
+  hosts: ansible1.example.com
+  gather_facts: yes
+  vars_files:
+    - vars/vars.yml   
+  tasks:
+    # (1) 패키지 설치 - firewalld, httpd, mod_ssl
+    # (2) 웹 서비스 설정
+    # (2-1) /etc/httpd/conf/httpd.conf (files/httpd.conf)
+    # (2-2) /var/www/html/.htaccess (files/.htaccess)
+    # (2-3) /etc/httpd/secrets/htpasswd (files/htpasswd)
+    #  * /etc/httpd/secrets 디렉토리 생성
+    #  * /etc/httpd/secrets/htpasswd 배포
+    # (2-4) /var/www/html/index.html (using the facts)
+    #  * ansible1.example.com - ip
+    # (3) 서비스 기동 - firewalld, httpd
+    # (4) 방화벽 서비스 등록 - http, https
+    # (5) 테스트 - 인증
+
+    - name: (1) 패키지 설치 - firewalld, httpd, mod_ssl
+      yum:
+        name:
+          - "{{ PKG_FW }}"
+          - "{{ PKG_HTTP }}"
+          - "{{ PKG_HTTPS }}"
+        state: present
+
+    - name: (2-1) /etc/httpd/conf/httpd.conf (files/httpd.conf)
+      copy:
+        src: "{{ CONF_HTTPD_SRC }}"
+        dest: "{{ CONF_HTTPD_DEST }}"
+        owner: root
+        group: root
+        mode: '0644'
+    
+    - name: (2-2) /var/www/html/.htaccess (files/.htaccess)
+      copy:
+        src: "{{ HTACCESS_SRC }}"
+        dest: "{{ HTACCESS_DEST }}"
+        owner: apache
+        group: apache
+        mode: '0400'
+
+    - name: (2-3-1) /etc/httpd/secrets 디렉토리 생성
+      file:
+        path: "{{ SECRETS_DIR }}"
+        state: directory
+        owner: apache
+        group: apache
+        mode: '0700'
+
+    - name: (2-3-2) /etc/httpd/secrets/htpasswd 배포
+      copy:
+        src: "{{ SECRETS_SRC }}"
+        dest: "{{ SECRETS_DEST }}"
+        owner: apache
+        group: apache
+        mode: '0400'
+    
+    - name: (2-4) /var/www/html/index.html (using the facts)
+      copy:
+        content: "Hostname: {{ ansible_hostname }}, - IPv4: {{ ansible_default_ipv4.address }}"
+        dest: "{{ WEB_ROOT }}/index.html"
+    
+    - name: (3) 서비스 기동 - firewalld, httpd
+      service:
+        name: "{{ item }}"
+        state: started
+        enabled: yes
+      with_items:
+        - "{{ SVC_FW  }}"
+        - "{{ SVC_WEB }}"
+
+    - name: (4) 방화벽 서비스 등록 - http, https
+      firewalld:
+        service: "{{ item }}"
+        permanent: yes
+        immediate: yes
+        state: enabled
+      with_items:
+        - "{{ FW_HTTP }}"
+        - "{{ FW_HTTPS }}"
+
+    
+- name:  (5) 테스트 - 인증
+  hosts: localhost
+  vars_files:
+    - vars/secrets.yml
+    - vars/vars2.yml
+  tasks:
+    - name: Test Web Service with basic authentication
+      uri:
+        url: "{{ item }}"
+        user: "{{ WEB_USER }}"
+        password: "{{ web_pass }}"
+        validate_certs: false
+        force_basic_auth: yes
+        status_code: 200
+      with_items:
+        - "{{ REQUEST_URL1 }}"
+        - "{{ REQUEST_URL2 }}"

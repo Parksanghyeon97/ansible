@@ -1,0 +1,11 @@
+---
+- name: 사용자를 삭제하자
+  hosts: devservers
+  vars_files: vars/secret.yml
+  tasks:
+    - name: 암호화된 파일 사용해서 사용자 삭제
+      user:
+        name: "{{ item.name }}"
+        state: absent
+        remove: yes
+      with_items: "{{ newusers }}"

@@ -1,0 +1,19 @@
+---
+- name: 패키지 설치 - {{ PKG_FW }}
+  ansible.builtin.yum:
+    name: "{{ PKG_FW }}"
+    state: latest
+
+- name: 서비스 기동 - {{ SVC_FW }}
+  ansible.builtin.service:
+    name: "{{ SVC_FW }}"
+    state: started
+    enabled: yes
+
+- name: 방화벽 서비스 등록 - {{ FW_WEBS }}
+  firewalld:
+    service: "{{ item }}"
+    permanent: yes
+    immediate: yes
+    state: enabled
+  with_items: "{{ FW_WEBS }}"

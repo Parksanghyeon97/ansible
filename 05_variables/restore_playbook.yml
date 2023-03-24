@@ -1,0 +1,48 @@
+---
+- name: playbook 복구하자
+  hosts: webserver
+  vars_files: vars/vars.yml
+  tasks:
+    # 1) 방화벽 내리고
+    # 2) 서비스 내리고 
+    # 3) 웹 파일 남아있는거 지우기
+    # 4) 패키지 지우기
+  
+    - name: (1) 방화벽 내리기
+      firewalld:
+        service: "{{ item }}"
+        permanent: yes
+        immediate: yes
+        state: disabled
+      ignore_errors: yes
+      loop:
+        - "{{ fw_http }}"
+        - "{{ fw_https }}"
+    
+    - name: (2) 서비스 내리기
+      service:
+        name: "{{ item }}"
+        state: stopped
+        enabled: no
+      ignore_errors: yes
+      loop:
+        - "{{ svc_fw }}"
+        - "{{ svc_web }}"
+    
+    - name: (3) 남아있는 파일 지우기
+      file:
+        path: /var/www/html/index.html
+        state: absent
+
+    - name: (4) 패키지 지우기
+      yum:
+        name:
+          - "{{ pkg_http }}"
+          - "{{ pkg_https }}"
+          - "{{ pkg_python }}"
+          - "{{ pgk_fw }}"
+        state: absent
+    
+
+
+  
